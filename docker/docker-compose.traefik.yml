@@ -31,8 +31,6 @@ x-hub20_service: &hub20_service
     HUB20_DATABASE_NAME: hub20
     HUB20_DATABASE_USER: hub20
     HUB20_EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
-    HUB20_RAIDEN_ENABLED: 1
-    HUB20_RAIDEN_API_ADDRESS: http://raiden:5001
 
   volumes:
     - static-data:/var/hub20/static
@@ -43,7 +41,6 @@ services:
     container_name: "traefik"
 
     command:
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.watch=true"
@@ -85,6 +82,8 @@ services:
 
   raiden:
     image: "mushroomlabs/raiden:${RAIDEN_VERSION:-2.0.0}"
+    restart: on-failure
+
     env_file:
       - .env
 
@@ -93,7 +92,6 @@ services:
       RAIDEN_API_ADDRESS: 0.0.0.0:5001
       RAIDEN_ENABLE_MONITORING: "true"
       RAIDEN_ENVIRONMENT_TYPE: development
-      RAIDEN_ETH_RPC_ENDPOINT: "${WEB3_PROVIDER_URI}"
       RAIDEN_KEYSTORE_PATH: /keystore
       RAIDEN_WEB_UI: "false"
       RAIDEN_MATRIX_SERVER: "${HUB20_RAIDEN_TRANSPORT_SERVICE_URL:-https://transport.demo001.env.raiden.network}"
@@ -162,7 +160,7 @@ services:
       /bin/bash -c "
         django-admin migrate
         django-admin collectstatic --noinput
-        uvicorn hub20.api.asgi:application --port 8080 --host 0.0.0.0
+        uvicorn hub20.api.asgi:application --port 8080 --host 0.0.0.0 --proxy-headers
       "
 
     ports:
