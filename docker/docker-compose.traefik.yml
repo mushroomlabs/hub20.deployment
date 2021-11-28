@@ -187,9 +187,9 @@ services:
     command: celery -A hub20.api beat -l info -S django
 
   # Background command to listen to blockchain and raiden events
-  job_listen_events:
+  event_publisher:
     <<: *hub20_service
-    command: django-admin run_event_listeners
+    command: django-admin run_event_streamers
 
 networks:
   default:
